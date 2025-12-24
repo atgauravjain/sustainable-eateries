@@ -23,46 +23,108 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css">
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-    
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <style>
-        /* Base Styles */
-        body { font-family: Arial, sans-serif; padding-top: 20px; padding-bottom: 40px; }
-        .well { background: #f5f5f5; border: 1px solid #e3e3e3; box-shadow: none; }
+        /* --- Base Layout --- */
+        body { font-family: Arial, sans-serif; padding-top: 0px; padding-bottom: 0px; }
+        .well { background: #f5f5f5; border: 0px solid #e3e3e3; box-shadow: none; }
         
-        /* Map Styling */
-        #mymap { height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px; }
+        /* --- Map Canvas --- */
+        #mymap { 
+            height: 580px; 
+            width: 100%; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            z-index: 1; 
+        }
         
-        /* Mobile Optimization */
+        /* --- Mobile Optimization --- */
         @media (max-width: 767px) {
             #mymap { height: 400px; }
             h1 { font-size: 26px; margin-top: 10px; }
             h3 { font-size: 16px; margin-top: 5px;}
         }
 
-        /* Marker Colors */
+        /* --- Vertical Toolbar (Left Side) --- */
+        .map-toolbar {
+            background: white;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            /* background-clip: padding-box;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.65); */
+            margin-left: 10px;
+            margin-top: 10px;
+            position: relative; /* Context for popup */
+        }
+
+        .tool-btn {
+            width: 34px;
+            height: 34px;
+            line-height: 34px; 
+            text-align: center;
+            background-color: #fff;
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .tool-btn:first-child { border-top-left-radius: 4px; border-top-right-radius: 4px; }
+        .tool-btn:last-child { border-bottom: none; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
+        .tool-btn:hover { background-color: #f4f4f4; color: #000; }
+        
+        .ion-plus, .ion-minus { font-size: 16px; font-weight: bold; }
+
+        /* --- Search Pop-out Container (Single Cell Style) --- */
+        #search-container-popup {
+            position: absolute;
+            left: 36px; /* Directly next to the toolbar border */
+            top: 105px; /* Aligns exactly with the 4th button */
+            z-index: 9999; 
+            display: none; 
+            background: white;
+            padding: 0; /* Remove padding for seamless look */
+            border-radius: 0 4px 4px 0; /* Rounded only on right side */
+            box-shadow: 2px 1px 5px rgba(0,0,0,0.3);
+            min-width: 220px;
+            height: 34px; /* Match button height */
+            border: 1px solid #aaa;
+            border-left: none; /* Merge with button */
+        }
+
+        /* --- Select2 Customization --- */
+        .select2-container { 
+            width: 100% !important; 
+            height: 100%;
+        }
+        .select2-selection {
+            border: none !important; /* Remove internal border */
+            height: 32px !important; /* Fit container */
+            border-radius: 0 4px 4px 0 !important;
+            background-color: transparent !important;
+        }
+        .select2-selection__rendered {
+            line-height: 32px !important;
+        }
+        .select2-selection__arrow {
+            height: 32px !important;
+        }
+        .select2-dropdown { 
+            z-index: 10000; 
+            border: 1px solid #aaa;
+            margin-top: 1px;
+        }
+        
+        /* Marker Cluster Colors */
         .marker-cluster-small { background-color: rgba(181, 226, 140, 0.6); }
         .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); }
         .marker-cluster-medium { background-color: rgba(241, 211, 87, 0.6); }
         .marker-cluster-medium div { background-color: rgba(240, 194, 12, 0.6); }
         .marker-cluster-large { background-color: rgba(253, 156, 115, 0.6); }
         .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); }
-
-        /* Custom Style for the Map Search Box */
-        .leaflet-control-search-container {
-            background: white;
-            padding: 5px;
-            border-radius: 4px;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-            margin-right: 10px;
-            margin-top: 10px;
-        }
-        /* Make the dropdown look nice inside the map */
-        .select2-container { width: 200px !important; }
-        @media (max-width: 767px) {
-            .select2-container { width: 150px !important; } /* Smaller on mobile */
-        }
     </style>
     
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -74,13 +136,15 @@
     <header class="text-center">
         <h1>Sustainable Eateries</h1>
         <h3>A crowdsourced database to capture how eco-friendly eateries are around the globe</h3>
-        <img src="images/sustainable_eateries.webp" alt="Sustainable Eateries examples" class="img-responsive center-block" style="margin-top: 20px; width: 100%;">
-         
+
+        <img src="images/sustainable_eateries.webp" 
+             alt="Collage showing sustainable vs non-sustainable food packaging" 
+             class="img-responsive center-block" 
+             style="margin-top: 10px; width: 100%;">
     </header>
     <hr>
 
     <main class="row">
-        
         <aside class="col-sm-4">
             <div class="well">
                 <h4>How sustainable was the eatery you visited?</h4>
@@ -92,25 +156,26 @@
 
                 <div class="form-group">
                     <label>Choose a rating based on services:</label>
-                    <div class="radio"><label><input type="radio" name="rating" value="0"> 0: Dine-in/takeaway: All single-use plastics</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="1"> 1: Mix of single-use + natural disposables</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="2"> 2: All natural disposables</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="3"> 3: Dine-in: No disposables + takeaway: Plastics</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="4"> 4: Dine-in: No disposables + takeaway: Natural</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="5"> 5: All in 4 + Zero waste awareness</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="0"> 0: Dine-in or takeaway: All single-use plastics</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="1"> 1: Dine-in or takeaway: Mix of single-use plastics + natural disposables</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="2"> 2: Dine-in or takeaway: All natural disposables</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="3"> 3: Dine-in: No disposables + takeaway: Mostly single-use plastics</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="4"> 4: Dine-in: No disposables + takeaway: All natural disposables or no disposables + waste segregation</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="5"> 5: All in 4 + signage for zero waste awareness + responsible handling of food waste (composted or sent to other places for consumption)</label></div>
                 </div>
 
                 <div class="alert alert-info" style="font-size: 0.9em; padding: 10px; color: #31708f; background-color: #d9edf7; border-color: #bce8f1;">
-                    <strong>Tip:</strong> Natural disposables are made from materials like sugarcane, bamboo, paper, or leaves.
-                </div>
+                    <p>Single-use plastics: Cutlery/packaging/containers made of plastic/polystyrene that are intended for a single use</p>
+                    <p>Natural disposables are single usage cutlery/packaging/containers made from natural materials, such as sugarcane, paper, bamboo leaves of palm or areca nut..
+                </div></p>
 
                 <div class="form-group">
-                    <label for="Comments">Comments:</label>
-                    <input type="text" class="form-control" id="Comments" placeholder="Feedback/Suggestions">
+                    <label for="Comments">Comments, suggestions, feedback (if any)</label>
+                    <input type="text" class="form-control" id="Comments">
                 </div>
                 <div class="form-group">
-                    <label for="Email">Email (Optional):</label>
-                    <input type="email" class="form-control" id="Email" placeholder="For collaboration updates">
+                    <label for="Email">Would you like to collaborate on this project? Share your email to receive occasional feedback/update emails</label>
+                    <input type="email" class="form-control" id="Email">
                 </div>
 
                 <div style="margin-bottom: 15px;">
@@ -132,7 +197,9 @@
             <div class="tab-content">
                 <div id="viz" class="tab-pane fade in active">
                     <br>
-                    <p class="lead" style="font-size: 16px;">In the times when most human activities are motivated by immediate economic outcomes... this is a tiny effort to document sustainable measures relevant to eateries around the world! 🌿</p>
+                    <p class="lead" style="font-size: 16px;">In the times when most human activities are motivated by immediate economic outcomes.. and the times when we are facing the wrath of that ideology in the air, water, land pollution in our surroundings, this is a tiny effort to document | appreciate sustainable measures relevant to eateries around the world!</p>
+                    <p class="lead" style="font-size: 16px;">Whether it is a humble roadside food cart that refuses to serve in single-use plastics, or it is a roaring zerowaste restaurant, bring it all in, as each effort counts. Also vice versa, so wherever in the spectrum the eatery you visited lies, bring it on.</p>
+                    <p class="lead" style="font-size: 16px;">Search the existing data for suggestions if you are in a new place, or add an entry to the dataset of the eatery you just visited. 🌿</p>
                     <div id="mymap"></div>
                 </div>
 
@@ -226,10 +293,10 @@
             <div id="wcb" class="carbonbadge"></div>
         </section>
     </main>
-    
-    <footer class="text-center text-muted" style="margin-top: 20px;">
+   <!-- <footer class="text-center text-muted" style="margin-top: 20px;">
         <p><small>&copy; Sustainable Eateries. Data provided by community.</small></p>
-    </footer>
+    </footer>     -->
+ 
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -246,24 +313,28 @@
     // --- SETTINGS ---
     const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh4beD3IFkV1e7CGpQVnuXakUq6sFkcbSiOWR0NGUI8VVRPi_umk0LZCxKUdyWhwBHmg/exec"; 
 
-    // --- 1. PLACES AUTOCOMPLETE ---
+// --- 1. LOAD EXTERNAL HTML FILES ---
+    function loadExternalContent() {
+        fetch('Iwanttoknowmore.html')
+            .then(r => r.ok ? r.text() : "Error loading file.")
+            .then(html => document.getElementById('knowmore-content').innerHTML = html);
+        fetch('Iwanttodomore.html')
+            .then(r => r.ok ? r.text() : "Error loading file.")
+            .then(html => document.getElementById('domore-content').innerHTML = html);
+    }
+    window.onload = loadExternalContent;
+
+    // --- 2. PLACES AUTOCOMPLETE ---
     let selectedPlace = {};
     function initAutocomplete() {
         if (!google || !google.maps || !google.maps.places) return;
-        
         var input = document.getElementById('EateryAddress');
         var autocomplete = new google.maps.places.Autocomplete(input, {types: ['establishment']});
         autocomplete.setFields(['formatted_address', 'geometry', 'name']);
-        
         autocomplete.addListener('place_changed', function() {
             var place = autocomplete.getPlace();
-            if (!place.geometry) {
-                input.classList.add('alert-danger');
-                return;
-            } else {
-                 input.classList.remove('alert-danger');
-            }
-
+            if (!place.geometry) { input.classList.add('alert-danger'); return; } 
+            else { input.classList.remove('alert-danger'); }
             selectedPlace = {
                 name: place.name,
                 address: place.formatted_address,
@@ -273,33 +344,22 @@
         });
     }
 
-    // --- 2. SUBMIT DATA ---
+    // --- 3. SUBMIT DATA ---
     function submitData() {
         const ratingInput = document.querySelector('input[name="rating"]:checked');
         const comments = document.getElementById('Comments').value;
         const email = document.getElementById('Email').value;
         const msg = document.getElementById('statusMsg');
         const btn = document.getElementById('submitBtn');
-
         msg.innerHTML = "";
 
-        if (!selectedPlace.lat) {
-             alert("Please select an eatery from the Google suggestions dropdown.");
-             return;
-        }
-        if (!ratingInput) {
-            alert("Please choose a rating.");
-            return;
-        }
+        if (!selectedPlace.lat) { alert("Please select an eatery from the dropdown."); return; }
+        if (!ratingInput) { alert("Please choose a rating."); return; }
         
         const captchaToken = grecaptcha.getResponse();
-        if (captchaToken.length === 0) {
-            alert("Please verify you are human by clicking the reCAPTCHA checkbox.");
-            return;
-        }
+        if (captchaToken.length === 0) { alert("Please verify you are human."); return; }
 
-        btn.disabled = true;
-        btn.innerText = "Submitting...";
+        btn.disabled = true; btn.innerText = "Submitting...";
 
         const payload = {
             EateryName: selectedPlace.name,
@@ -313,79 +373,123 @@
         };
 
         fetch(APP_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', 
+            method: 'POST', mode: 'no-cors', 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
         }).then(() => {
-            msg.innerHTML = '<span class="text-success">Thank you! Your entry has been submitted. The map will refresh shortly. 🍀</span>';
-            document.getElementById('EateryAddress').value = "";
-            document.getElementById('Comments').value = "";
-            selectedPlace = {};
-            grecaptcha.reset();
+            msg.innerHTML = '<span class="text-success">Entry submitted! Refreshing... 🍀</span>';
             setTimeout(() => location.reload(), 3000);
         }).catch(err => {
             console.error(err);
-            msg.innerHTML = '<span class="text-danger">Error submitting. Please ensure internet connection and try again.</span>';
-            btn.disabled = false;
-            btn.innerText = "Submit Entry";
+            msg.innerHTML = '<span class="text-danger">Error. Try again.</span>';
+            btn.disabled = false; btn.innerText = "Submit Entry";
         });
     }
 
-    // --- 3. LOAD MAP WITH SEARCH DROPDOWN ---
-    var map = L.map('mymap').setView([20, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+    // --- 4. MAP & TOOLBAR LOGIC ---
+    const INITIAL_COORDS = [20, 0];
+    const INITIAL_ZOOM = 2;
 
-    // Locate Me Button
-    L.Control.Button = L.Control.extend({
+    var map = L.map('mymap', { zoomControl: false }).setView(INITIAL_COORDS, INITIAL_ZOOM);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+    // -- Helper to close search --
+    function closeSearchPopup() {
+        document.getElementById('search-container-popup').style.display = 'none';
+        $('#eaterySearch').select2('close');
+    }
+
+    // -- Custom Toolbar --
+    L.Control.CustomToolbar = L.Control.extend({
+        options: { position: 'topleft' },
         onAdd: function(map) {
-            var btn = L.DomUtil.create('button', 'btn btn-default btn-sm');
-            btn.innerHTML = '<i class="ion-android-locate"></i> Search Near Me';
-            btn.style.margin = "10px 0 0 10px";
-            btn.onclick = function(){ 
+            var container = L.DomUtil.create('div', 'map-toolbar');
+            container.id = 'map-toolbar-container'; 
+            L.DomEvent.disableClickPropagation(container);
+
+            var createBtn = function(iconClass, title, onClick) {
+                var btn = L.DomUtil.create('div', 'tool-btn', container);
+                btn.innerHTML = '<i class="' + iconClass + '"></i>';
+                btn.title = title;
+                btn.onclick = onClick;
+                return btn;
+            };
+
+            // 1. Zoom In
+            createBtn('ion-plus', 'Zoom In', function() { closeSearchPopup(); map.zoomIn(); });
+            // 2. Zoom Out
+            createBtn('ion-minus', 'Zoom Out', function() { closeSearchPopup(); map.zoomOut(); });
+            // 3. Reset
+            createBtn('ion-refresh', 'Reset View', function() { closeSearchPopup(); map.setView(INITIAL_COORDS, INITIAL_ZOOM); });
+
+            // 4. Search (Toggle)
+            var searchBtn = createBtn('ion-search', 'Search', function(e) {
+                var popup = document.getElementById('search-container-popup');
+                if (popup.style.display === 'none' || popup.style.display === '') {
+                    popup.style.display = 'block';
+                    setTimeout(function(){ $('#eaterySearch').select2('open'); }, 100);
+                } else {
+                    popup.style.display = 'none';
+                }
+                e.stopPropagation(); 
+            });
+            searchBtn.id = 'search-toggle-btn';
+
+            // 5. Near Me
+            createBtn('ion-android-locate', 'Near Me', function() { 
+                closeSearchPopup(); 
                 map.locate({setView: true, maxZoom: 16, enableHighAccuracy: true}); 
+            });
+
+            // -- Search Popup Container --
+            var searchPopup = L.DomUtil.create('div', '', container);
+            searchPopup.id = 'search-container-popup';
+            // Simple Dropdown inside
+            searchPopup.innerHTML = '<select id="eaterySearch"><option></option></select>';
+            L.DomEvent.disableClickPropagation(searchPopup);
+
+            return container;
+        }
+    });
+    map.addControl(new L.Control.CustomToolbar());
+
+    // -- Click outside to close --
+    document.addEventListener('click', function(event) {
+        var popup = document.getElementById('search-container-popup');
+        var btn = document.getElementById('search-toggle-btn');
+        var select2Open = document.querySelector('.select2-container--open');
+
+        if (popup && popup.style.display === 'block') {
+            if (!popup.contains(event.target) && !btn.contains(event.target) && !select2Open) {
+                closeSearchPopup();
             }
-            return btn;
         }
     });
-    new L.Control.Button({ position: 'topleft' }).addTo(map);
 
-    // --- NEW: Add Search Dropdown Control ---
-    var SearchControl = L.Control.extend({
-        options: { position: 'topright' },
-        onAdd: function(map) {
-            var div = L.DomUtil.create('div', 'leaflet-control-search-container');
-            // This prevents clicking the dropdown from clicking the map behind it
-            L.DomEvent.disableClickPropagation(div); 
-            div.innerHTML = '<select id="eaterySearch"><option></option></select>';
-            return div;
-        }
-    });
-    map.addControl(new SearchControl());
-
-    // Initialize the Select2 dropdown
+    // -- Init Select2 with custom language override --
     $(document).ready(function() {
         $('#eaterySearch').select2({
-            placeholder: "🔍 Find Eatery...",
+            placeholder: "Type to search...",
             allowClear: true,
-            width: 'resolve' // Use CSS width
+            minimumInputLength: 1, // Require typing
+            dropdownParent: $('#search-container-popup'),
+            language: {
+                // Remove the "Please enter 1 or more characters" message
+                inputTooShort: function () {
+                    return ''; 
+                }
+            }
         });
     });
 
+    // --- 5. FETCH DATA & MARKERS ---
     var markers = L.markerClusterGroup({ disableClusteringAtZoom: 15 });
-    
-    // Store markers in an object so we can find them by ID/Name later
     var markerMap = {}; 
 
-    // Fetch Data
     fetch(APP_SCRIPT_URL)
     .then(res => res.json())
     .then(data => {
         if(!Array.isArray(data)) return;
-        
-        // Sorting data alphabetically helps the dropdown list
         data.sort((a, b) => a.EateryName.localeCompare(b.EateryName));
 
         data.forEach((row, index) => {
@@ -399,43 +503,33 @@
                 else if(r >= 3) color = 'orange';
 
                 let icon = L.AwesomeMarkers.icon({
-                    icon: 'leaf',
-                    prefix: 'ion',
-                    markerColor: color,
-                    iconColor: 'white'
+                    icon: 'leaf', prefix: 'ion', markerColor: color, iconColor: 'white'
                 });
 
                 let marker = L.marker([lat, lng], {icon: icon});
-                marker.bindPopup(`<strong>${row.EateryName}</strong><br>Avg Rating: ${Number(r).toFixed(1)} / 5`);
+                marker.bindPopup(`<strong>${row.EateryName}</strong><br>Rating: ${Number(r).toFixed(1)}/5`);
                 markers.addLayer(marker);
 
-                // --- NEW: Add to Search Dropdown & Marker Map ---
-                // We use a unique ID (index) to link the dropdown option to the marker object
                 var optionId = "marker_" + index;
                 markerMap[optionId] = marker;
-
-                // Create the option for the dropdown
                 var newOption = new Option(row.EateryName, optionId, false, false);
-                $('#eaterySearch').append(newOption).trigger('change');
+                $('#eaterySearch').append(newOption);
             }
         });
         map.addLayer(markers);
     })
     .catch(e => console.log("Map Error:", e));
 
-    // --- NEW: Handle Search Selection ---
+    // Handle Selection
     $('#eaterySearch').on('select2:select', function (e) {
         var selectedId = e.params.data.id;
         var targetMarker = markerMap[selectedId];
-
         if (targetMarker) {
-            // 1. Zoom to the marker (Zoom level 18 is close)
             map.setView(targetMarker.getLatLng(), 18);
-            
-            // 2. If it's inside a cluster, we must expand the cluster first
             markers.zoomToShowLayer(targetMarker, function() {
                 targetMarker.openPopup();
             });
+            closeSearchPopup();
         }
     });
 
