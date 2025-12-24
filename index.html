@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sustainable Eateries</title>
     
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
@@ -14,25 +14,41 @@
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
 
     <style>
-        body { font-family: Arial, sans-serif; padding-top: 20px; }
+        body { font-family: Arial, sans-serif; padding-top: 20px; padding-bottom: 40px; }
+        .well { background: #f5f5f5; border: 1px solid #e3e3e3; box-shadow: none; }
+        
+        /* --- Responsive Map Sizing --- */
+        /* Default height for Laptops/Desktops */
         #mymap { height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px; }
-        .header-img { width: 100%; max-width: 800px; display: block; margin: 0 auto; }
-        .well { background: #f5f5f5; border: 1px solid #e3e3e3; }
+        
+        /* Mobile adjustments (screens narrower than 768px) */
+        @media (max-width: 767px) {
+            /* Make map shorter on mobile so tabs below are accessible */
+            #mymap { height: 400px; }
+            /* Reduce header sizes slightly on mobile so they don't dominate screen space */
+            h1 { font-size: 26px; margin-top: 10px; }
+            h3 { font-size: 16px; margin-top: 5px;}
+        }
+
+        /* Fix for marker cluster colors to match R Shiny style */
         .marker-cluster-small { background-color: rgba(181, 226, 140, 0.6); }
         .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); }
+        .marker-cluster-medium { background-color: rgba(241, 211, 87, 0.6); }
+        .marker-cluster-medium div { background-color: rgba(240, 194, 12, 0.6); }
+        .marker-cluster-large { background-color: rgba(253, 156, 115, 0.6); }
+        .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); }
     </style>
     
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 
-<div class="container-fluid">
-    <div class="text-center">
+<div class="container"> <div class="text-center">
         <h1>Sustainable Eateries</h1>
         <h3>A crowdsourced database to capture how eco-friendly eateries are around the globe</h3>
-        <img src="sustainable_eateries.png" alt="Sustainable Eateries" class="header-img">
+        <img src="sustainable_eateries.png" alt="Sustainable Eateries examples" class="img-responsive img-thumbnail center-block" style="margin-top: 20px; width: 100%;">
     </div>
-    <br>
+    <hr>
 
     <div class="row">
         <div class="col-sm-4">
@@ -40,35 +56,36 @@
                 <h4>How sustainable was the eatery you visited?</h4>
                 
                 <div class="form-group">
-                    <label>Enter Eatery Name:</label>
-                    <input type="text" class="form-control" id="EateryAddress" placeholder="Start typing address...">
+                    <label for="EateryAddress">Enter Eatery Name:</label>
+                    <input type="text" class="form-control" id="EateryAddress" placeholder="Start typing address..." autocomplete="off">
                 </div>
 
                 <div class="form-group">
-                    <label>Choose a rating:</label>
-                    <div class="radio"><label><input type="radio" name="rating" value="0"> 0: All single-use plastics</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="1"> 1: Mix single-use + natural</label></div>
+                    <label>Choose a rating based on services:</label>
+                    <div class="radio"><label><input type="radio" name="rating" value="0"> 0: Dine-in/takeaway: All single-use plastics</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="1"> 1: Mix of single-use + natural disposables</label></div>
                     <div class="radio"><label><input type="radio" name="rating" value="2"> 2: All natural disposables</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="3"> 3: Dine-in Reusable / Takeaway Plastic</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="4"> 4: Dine-in Reusable / Takeaway Natural</label></div>
-                    <div class="radio"><label><input type="radio" name="rating" value="5"> 5: Zero Waste + Composting</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="3"> 3: Dine-in: No disposables + takeaway: Plastics</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="4"> 4: Dine-in: No disposables + takeaway: Natural</label></div>
+                    <div class="radio"><label><input type="radio" name="rating" value="5"> 5: All in 4 + Zero waste awareness</label></div>
                 </div>
 
-                <div class="alert alert-info" style="font-size: 0.9em; padding: 10px;">
-                    <strong>Info:</strong> Natural disposables are made from materials like sugarcane, bamboo, or leaves.
+                <div class="alert alert-info" style="font-size: 0.9em; padding: 10px; color: blue; background-color: #f0f8ff; border-color: #bee5eb;">
+                    <strong>Tip:</strong> Natural disposables are made from materials like sugarcane, bamboo, paper, or leaves.
                 </div>
 
                 <div class="form-group">
-                    <label>Comments:</label>
+                    <label for="Comments">Comments:</label>
                     <input type="text" class="form-control" id="Comments" placeholder="Feedback/Suggestions">
                 </div>
                 <div class="form-group">
-                    <label>Email (Optional):</label>
-                    <input type="email" class="form-control" id="Email" placeholder="For collaboration">
+                    <label for="Email">Email (Optional):</label>
+                    <input type="email" class="form-control" id="Email" placeholder="For collaboration updates">
                 </div>
 
-                <div class="g-recaptcha" data-sitekey="6LeS0TQsAAAAAG9AWi_PH53Wr6kd8TLY6soeKk-T"></div>
-                <br>
+                <div style="margin-bottom: 15px;">
+                     <div class="g-recaptcha" data-sitekey="6LeS0TQsAAAAAG9AWi_PH53Wr6kd8TLY6soeKk-T"></div>
+                </div>
 
                 <button id="submitBtn" class="btn btn-primary btn-block" onclick="submitData()">Submit Entry</button>
                 <div id="statusMsg" style="margin-top:10px; font-weight:bold;"></div>
@@ -85,14 +102,18 @@
             <div class="tab-content">
                 <div id="viz" class="tab-pane fade in active">
                     <br>
-                    <p>Search the existing data for suggestions or add an entry. 🌿</p>
+                    <p class="lead" style="font-size: 16px;">In the times when most human activities are motivated by immediate economic outcomes... this is a tiny effort to document sustainable measures relevant to eateries around the world! 🌿</p>
                     <div id="mymap"></div>
                 </div>
+
                 <div id="knowmore" class="tab-pane fade">
-                    <br><h4>About</h4><p>Details about the project...</p>
+                    <br>
+                    <div id="knowmore-content">Loading...</div>
                 </div>
+
                 <div id="domore" class="tab-pane fade">
-                    <br><h4>Action</h4><p>How you can help...</p>
+                    <br>
+                    <div id="domore-content">Loading...</div>
                 </div>
             </div>
             
@@ -113,18 +134,42 @@
 
 <script>
     // --- SETTINGS ---
-    const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh4beD3IFkV1e7CGpQVnuXakUq6sFkcbSiOWR0NGUI8VVRPi_umk0LZCxKUdyWhwBHmg/exec"; 
+    // Paste the long URL from Google Apps Script deployment here
+    const APP_SCRIPT_URL = "YOUR_WEB_APP_URL"; 
 
-    // --- 1. PLACES AUTOCOMPLETE ---
+    // --- 1. LOAD EXTERNAL HTML FILES ---
+    function loadExternalContent() {
+        fetch('Iwanttoknowmore.html')
+            .then(r => r.ok ? r.text() : "Error loading file.")
+            .then(html => document.getElementById('knowmore-content').innerHTML = html);
+
+        fetch('Iwanttodomore.html')
+            .then(r => r.ok ? r.text() : "Error loading file.")
+            .then(html => document.getElementById('domore-content').innerHTML = html);
+    }
+    window.onload = loadExternalContent;
+
+    // --- 2. PLACES AUTOCOMPLETE ---
     let selectedPlace = {};
     function initAutocomplete() {
+        // Ensure google maps is loaded before running
+        if (!google || !google.maps || !google.maps.places) return;
+        
         var input = document.getElementById('EateryAddress');
+        // Restrict to establishments to avoid generic cities
         var autocomplete = new google.maps.places.Autocomplete(input, {types: ['establishment']});
         autocomplete.setFields(['formatted_address', 'geometry', 'name']);
         
         autocomplete.addListener('place_changed', function() {
             var place = autocomplete.getPlace();
-            if (!place.geometry) return;
+            if (!place.geometry) {
+                // User entered something that wasn't auto-completed
+                input.classList.add('alert-danger');
+                return;
+            } else {
+                 input.classList.remove('alert-danger');
+            }
+
             selectedPlace = {
                 name: place.name,
                 address: place.formatted_address,
@@ -134,24 +179,30 @@
         });
     }
 
-    // --- 2. SUBMIT DATA (SECURE) ---
+    // --- 3. SUBMIT DATA (SECURE) ---
     function submitData() {
-        const rating = document.querySelector('input[name="rating"]:checked');
+        const ratingInput = document.querySelector('input[name="rating"]:checked');
         const comments = document.getElementById('Comments').value;
         const email = document.getElementById('Email').value;
         const msg = document.getElementById('statusMsg');
         const btn = document.getElementById('submitBtn');
 
+        msg.innerHTML = "";
+
         // Validation
-        if (!selectedPlace.lat || !rating) {
-            alert("Please select a valid location from the list and a rating.");
+        if (!selectedPlace.lat) {
+             alert("Please select an eatery from the Google suggestions dropdown.");
+             return;
+        }
+        if (!ratingInput) {
+            alert("Please choose a rating.");
             return;
         }
         
         // Get Recaptcha Token
         const captchaToken = grecaptcha.getResponse();
         if (captchaToken.length === 0) {
-            alert("Please verify you are human.");
+            alert("Please verify you are human by clicking the reCAPTCHA checkbox.");
             return;
         }
 
@@ -163,75 +214,95 @@
             EateryAddress: selectedPlace.address,
             Lat: selectedPlace.lat,
             Lng: selectedPlace.lng,
-            Sustainabilityrating: rating.value,
+            Sustainabilityrating: ratingInput.value,
             Comments: comments,
             Email: email,
-            captchaToken: captchaToken // Send token to backend
+            captchaToken: captchaToken 
         };
 
         fetch(APP_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // Standard for GAS
-            headers: { 'Content-Type': 'application/json' },
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Changed for better CORS handling in some browsers
             body: JSON.stringify(payload)
         }).then(() => {
-            msg.innerHTML = '<span class="text-success">Entry added! Refreshing map...</span>';
-            setTimeout(() => location.reload(), 2000);
+            msg.innerHTML = '<span class="text-success">Thank you! Your entry has been submitted. The map will refresh shortly. 🍀</span>';
+            // Reset form
+            document.getElementById('EateryAddress').value = "";
+            document.getElementById('Comments').value = "";
+            selectedPlace = {};
+            grecaptcha.reset();
+            // Reload page after 3 seconds to show new point
+            setTimeout(() => location.reload(), 3000);
         }).catch(err => {
             console.error(err);
-            msg.innerHTML = '<span class="text-danger">Error submitting.</span>';
+            msg.innerHTML = '<span class="text-danger">Error submitting. Please ensure internet connection and try again.</span>';
             btn.disabled = false;
             btn.innerText = "Submit Entry";
         });
     }
 
-    // --- 3. LOAD MAP ---
+    // --- 4. LOAD MAP ---
     var map = L.map('mymap').setView([20, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
+        attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    var markers = L.markerClusterGroup();
+    var markers = L.markerClusterGroup({ disableClusteringAtZoom: 15 });
 
     // Add "Locate Me" Button
     L.Control.Button = L.Control.extend({
         onAdd: function(map) {
             var btn = L.DomUtil.create('button', 'btn btn-default btn-sm');
-            btn.innerHTML = '<span class="glyphicon glyphicon-screenshot"></span> Near Me';
-            btn.style.margin = "10px";
-            btn.onclick = function(){ map.locate({setView: true, maxZoom: 16}); }
+            btn.innerHTML = '<i class="ion-android-locate"></i> Search Near Me';
+            btn.style.margin = "10px 0 0 10px";
+            btn.style.cursor = "pointer";
+            btn.onclick = function(){ 
+                map.locate({setView: true, maxZoom: 16, enableHighAccuracy: true}); 
+            }
             return btn;
         }
     });
     new L.Control.Button({ position: 'topleft' }).addTo(map);
 
-    // Fetch Data
+    // Fetch Data from Google Sheet
     fetch(APP_SCRIPT_URL)
     .then(res => res.json())
     .then(data => {
+        if(!Array.isArray(data)) {
+             console.error("Data format error", data);
+             return;
+        }
         data.forEach(row => {
-            if(row.Lat && row.Lng) {
-                // Determine color
+            // Ensure Lat/Lng exist and are numbers
+            let lat = parseFloat(row.Lat);
+            let lng = parseFloat(row.Lng);
+
+            if(!isNaN(lat) && !isNaN(lng)) {
+                // Determine color based on rating
                 let color = 'red';
                 let r = parseFloat(row.MeanSustainabilityrating);
                 if(r >= 4) color = 'green';
                 else if(r >= 3) color = 'orange';
 
                 let icon = L.AwesomeMarkers.icon({
-                    icon: 'cutlery',
-                    prefix: 'glyphicon',
+                    icon: 'leaf', // Changed icon to leaf for sustainability theme
+                    prefix: 'ion',
                     markerColor: color,
                     iconColor: 'white'
                 });
 
-                let marker = L.marker([row.Lat, row.Lng], {icon: icon});
-                marker.bindPopup(`<b>${row.EateryName}</b><br>Rating: ${Number(r).toFixed(1)}/5`);
+                let marker = L.marker([lat, lng], {icon: icon});
+                // Simple popup style
+                let popupContent = `<strong>${row.EateryName}</strong><br>
+                                    Avg Rating: ${Number(r).toFixed(1)} / 5`;
+                marker.bindPopup(popupContent);
                 markers.addLayer(marker);
             }
         });
         map.addLayer(markers);
     })
-    .catch(e => console.log("Map Error:", e));
+    .catch(e => console.log("Map Error - Check connection or Sheet URL:", e));
 
 </script>
 </body>
