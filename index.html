@@ -3,56 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sustainable Eateries</title>
+    <title>Sustainable Eateries - Global Zero Waste Map</title>
+    
+    <meta name="description" content="Find zero-waste and sustainable eateries near you. A crowdsourced global map of eco-friendly restaurants, rated by the community.">
+    <meta name="keywords" content="sustainable food, zero waste restaurant, eco friendly dining, plastic free, sustainability map">
+    <meta name="author" content="Sustainable Eateries Community">
+    <meta property="og:title" content="Sustainable Eateries Map">
+    <meta property="og:description" content="Discover and rate eco-friendly eateries. Help reduce single-use plastics.">
+    <meta property="og:url" content="https://atgauravjain.github.io/sustainable-eateries/">
+    <meta property="og:type" content="website">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://maps.googleapis.com">
     
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css">
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <style>
+        /* Base Styles */
         body { font-family: Arial, sans-serif; padding-top: 20px; padding-bottom: 40px; }
         .well { background: #f5f5f5; border: 1px solid #e3e3e3; box-shadow: none; }
         
-        /* --- Responsive Map Sizing --- */
-        /* Default height for Laptops/Desktops */
+        /* Map Styling */
         #mymap { height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px; }
         
-        /* Mobile adjustments (screens narrower than 768px) */
+        /* Mobile Optimization */
         @media (max-width: 767px) {
-            /* Make map shorter on mobile so tabs below are accessible */
             #mymap { height: 400px; }
-            /* Reduce header sizes slightly on mobile so they don't dominate screen space */
             h1 { font-size: 26px; margin-top: 10px; }
             h3 { font-size: 16px; margin-top: 5px;}
         }
 
-        /* Fix for marker cluster colors to match R Shiny style */
+        /* Marker Colors */
         .marker-cluster-small { background-color: rgba(181, 226, 140, 0.6); }
         .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); }
         .marker-cluster-medium { background-color: rgba(241, 211, 87, 0.6); }
         .marker-cluster-medium div { background-color: rgba(240, 194, 12, 0.6); }
         .marker-cluster-large { background-color: rgba(253, 156, 115, 0.6); }
         .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); }
+
+        /* Custom Style for the Map Search Box */
+        .leaflet-control-search-container {
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        /* Make the dropdown look nice inside the map */
+        .select2-container { width: 200px !important; }
+        @media (max-width: 767px) {
+            .select2-container { width: 150px !important; } /* Smaller on mobile */
+        }
     </style>
     
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 
-<div class="container"> <div class="text-center">
+<div class="container"> 
+    
+    <header class="text-center">
         <h1>Sustainable Eateries</h1>
         <h3>A crowdsourced database to capture how eco-friendly eateries are around the globe</h3>
-        <img src="sustainable_eateries.png" alt="Sustainable Eateries examples" class="img-responsive center-block" style="margin-top: 20px; width: 100%;">
-
-    </div>
+        <img src="images/sustainable_eateries.webp" alt="Sustainable Eateries examples" class="img-responsive center-block" style="margin-top: 20px; width: 100%;">
+         
+    </header>
     <hr>
 
-    <div class="row">
-        <div class="col-sm-4">
+    <main class="row">
+        
+        <aside class="col-sm-4">
             <div class="well">
                 <h4>How sustainable was the eatery you visited?</h4>
                 
@@ -71,7 +100,7 @@
                     <div class="radio"><label><input type="radio" name="rating" value="5"> 5: All in 4 + Zero waste awareness</label></div>
                 </div>
 
-                <div class="alert alert-info" style="font-size: 0.9em; padding: 10px; color: blue; background-color: #f0f8ff; border-color: #bee5eb;">
+                <div class="alert alert-info" style="font-size: 0.9em; padding: 10px; color: #31708f; background-color: #d9edf7; border-color: #bce8f1;">
                     <strong>Tip:</strong> Natural disposables are made from materials like sugarcane, bamboo, paper, or leaves.
                 </div>
 
@@ -91,9 +120,9 @@
                 <button id="submitBtn" class="btn btn-primary btn-block" onclick="submitData()">Submit Entry</button>
                 <div id="statusMsg" style="margin-top:10px; font-weight:bold;"></div>
             </div>
-        </div>
+        </aside>
 
-        <div class="col-sm-8">
+        <section class="col-sm-8">
             <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#viz">Data Visualization</a></li>
                 <li><a data-toggle="tab" href="#knowmore">I want to know more</a></li>
@@ -108,20 +137,99 @@
                 </div>
 
                 <div id="knowmore" class="tab-pane fade">
-                    <br>
-                    <div id="knowmore-content">Loading...</div>
+                    <p><br /></p>
+                    <p><strong>Litter Litter Everywhere</strong>: Less than 10% of plastic
+                    gets recycled globally <a href="https://www.nationalgeographic.org/article/whopping-91-percent-plastic-isnt-recycled/">[1]</a>.
+                    Everything else is around us, in the land or in the oceans, as harmful
+                    litter.</p>
+                    <p><img src="images/plastic_litter_on_streets.webp" title="Plastic waste littered on the streets" alt="Plastic waste littered on the streets" width="70%" style="display: block; margin: auto;" /></p>
+                    <p><strong>Huge carbon footprint</strong>: Most of the plastic (~99%) is
+                    made from chemicals sourced from fossil fuel manufacturing and
+                    contributes to emission of greenhouse gases at each stage of its
+                    lifecycle: extraction, transport, refining, managing waste and impact on
+                    air, water, and land when disposed of <a href="https://www.ciel.org/wp-content/uploads/2019/05/Plastic-and-Climate-Executive-Summary-2019.pdf">[2]</a>.</p>
+                    <p><strong>Air Pollution</strong>: More than 40% of the waste around the
+                    globe is simply incinerated <a href="https://news.ucar.edu/12239/trash-burning-worldwide-significantly-worsens-air-pollution">[3]</a>.
+                    When plastic is burnt, it results in emission of toxic gases such as
+                    dioxins, furans, mercury and polychlorinated biphenyls (BCP) polluting
+                    the air and posing a major health risk to all life. <a href="https://www.unenvironment.org/news-and-stories/story/plastic-bag-bans-can-help-reduce-toxic-fumes">[4]</a></p>
+                    <p><strong>Health impact</strong>: Plastic is a health hazard at every
+                    stage of its lifecycle:</p>
+                    <ul>
+                    <li><p><strong>Extraction</strong>: Chemicals used for fracking fossil
+                    fuel to generate the raw material for plastic are known to have major
+                    health impacts including cancer, neurological, developmental,
+                    reproductive and immunity disorders.</p></li>
+                    <li><p><strong>Manufacturing</strong>: Processes to convert fossil fuel
+                    to plastic release carcinogens and other toxins in the air.</p></li>
+                    <li><p><strong>Consumer Usage</strong>: Use of plastic products leads to
+                    ingestion of microplastics and other toxins causing carcinogenic,
+                    developmental and endocrine-disrupting impacts.</p></li>
+                    <li><p><strong>Waste Management:</strong> All plastic waste management
+                    technologies (including incineration, co-incineration, gasification, and
+                    pyrolysis) result in the release of toxic metals, organic substances
+                    (dioxins and furans), acid gases to the air, water, and soils and
+                    impacting the health of workers and those living in the surrounding
+                    areas.</p></li>
+                    <li><p><strong>Waste in the Environment</strong>: Once plastic reaches
+                    the environment in the form of macro- or microplastics, it contaminates
+                    and accumulates in food chains through agricultural soils, terrestrial
+                    and aquatic food chains, and the water supply. This environmental
+                    plastic can easily leach toxic additives or concentrate toxins already
+                    in the environment, making them bioavailable again for direct or
+                    indirect human exposure. <a href="https://www.ciel.org/project-update/plastic-and-human-health-a-lifecycle-approach-to-plastic-pollution/">[5]</a></p></li>
+                    </ul>
+                    <div class="figure" style="text-align: center">
+                    <img src="images/plastic_injested_by_an_albatross_chick.webp" alt="Plastic found in stomach contents of a dead albatross chick" width="35%" />
+                    <p class="caption">
+                    Plastic found in stomach contents of a dead albatross chick [Image
+                    Courtesy: Open.edu]
+                    </p>
+                    </div>
+                    <blockquote>
+                    <p>Plastic adds to toxic litter everywhere on our planet, has a huge
+                    carbon footprint and tremendous health hazards during each stage of its
+                    lifecycle. Single usage of the material for minor conveniences of human
+                    living is not worth the huge negative impact of the material on other
+                    species and the planet. 🌏</p>
+                    </blockquote>
                 </div>
 
                 <div id="domore" class="tab-pane fade">
-                    <br>
-                    <div id="domore-content">Loading...</div>
+                    <p><br /></p>
+                    <ul>
+                    <li><p>Observe the type of waste eateries around you most typically
+                    generate.</p></li>
+                    <li><p>If you find a low waste eatery around you, appreciate them for
+                    what they do, that added boost will go a long way.</p></li>
+                    <li><p>Eat fresh at home, as much as you can. Nothing beats the
+                    freshness, health, taste or eco-friendliness of home food.</p></li>
+                    <li><p>If you cannot cook and eat, then dine-in at a nearby eatery
+                    instead of ordering a takeout.</p></li>
+                    <li><p>If takeout is a must, then take your own containers
+                    along.</p></li>
+                    <li><p>If none of the above, then try to order food which can be packed
+                    in natural biodegradable materials, and insist on that being the case.
+                    Say a firm no to disposable plastic cutlery.</p></li>
+                    <li><p>Yet if none of the above, then just wash the disposables, and try
+                    to reuse them. Or keep them in your sight to avoid more waste going
+                    forward.</p></li>
+                    </ul>
+                    <p><br /> <br /> 🍀 This is an open-source project. If you would like to
+                    collaborate on the work, reach out on the project’s github <a href="https://github.com/Nirzaree/ShinyWebAppWithFormAndLeafletMap">page</a>.
+                    If you have any feedback or comments, then say hi to Nirzaree at
+                    nirzaree[dot]svnit[at]gmail[dot]com 🍀</p>
                 </div>
             </div>
             
             <br>
             <div id="wcb" class="carbonbadge"></div>
-        </div>
-    </div>
+        </section>
+    </main>
+    
+    <footer class="text-center text-muted" style="margin-top: 20px;">
+        <p><small>&copy; Sustainable Eateries. Data provided by community.</small></p>
+    </footer>
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -130,41 +238,26 @@
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.min.js"></script>
 <script src="https://unpkg.com/website-carbon-badges@1.1.1/b.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDaRSuTtnn4Bg1WnAubG1b_gbK91KRAFK4&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
     // --- SETTINGS ---
-    // Paste the long URL from Google Apps Script deployment here
     const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh4beD3IFkV1e7CGpQVnuXakUq6sFkcbSiOWR0NGUI8VVRPi_umk0LZCxKUdyWhwBHmg/exec"; 
 
-    // --- 1. LOAD EXTERNAL HTML FILES ---
-    function loadExternalContent() {
-        fetch('Iwanttoknowmore.html')
-            .then(r => r.ok ? r.text() : "Error loading file.")
-            .then(html => document.getElementById('knowmore-content').innerHTML = html);
-
-        fetch('Iwanttodomore.html')
-            .then(r => r.ok ? r.text() : "Error loading file.")
-            .then(html => document.getElementById('domore-content').innerHTML = html);
-    }
-    window.onload = loadExternalContent;
-
-    // --- 2. PLACES AUTOCOMPLETE ---
+    // --- 1. PLACES AUTOCOMPLETE ---
     let selectedPlace = {};
     function initAutocomplete() {
-        // Ensure google maps is loaded before running
         if (!google || !google.maps || !google.maps.places) return;
         
         var input = document.getElementById('EateryAddress');
-        // Restrict to establishments to avoid generic cities
         var autocomplete = new google.maps.places.Autocomplete(input, {types: ['establishment']});
         autocomplete.setFields(['formatted_address', 'geometry', 'name']);
         
         autocomplete.addListener('place_changed', function() {
             var place = autocomplete.getPlace();
             if (!place.geometry) {
-                // User entered something that wasn't auto-completed
                 input.classList.add('alert-danger');
                 return;
             } else {
@@ -180,7 +273,7 @@
         });
     }
 
-    // --- 3. SUBMIT DATA (SECURE) ---
+    // --- 2. SUBMIT DATA ---
     function submitData() {
         const ratingInput = document.querySelector('input[name="rating"]:checked');
         const comments = document.getElementById('Comments').value;
@@ -190,7 +283,6 @@
 
         msg.innerHTML = "";
 
-        // Validation
         if (!selectedPlace.lat) {
              alert("Please select an eatery from the Google suggestions dropdown.");
              return;
@@ -200,7 +292,6 @@
             return;
         }
         
-        // Get Recaptcha Token
         const captchaToken = grecaptcha.getResponse();
         if (captchaToken.length === 0) {
             alert("Please verify you are human by clicking the reCAPTCHA checkbox.");
@@ -224,16 +315,14 @@
         fetch(APP_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Changed for better CORS handling in some browsers
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
         }).then(() => {
             msg.innerHTML = '<span class="text-success">Thank you! Your entry has been submitted. The map will refresh shortly. 🍀</span>';
-            // Reset form
             document.getElementById('EateryAddress').value = "";
             document.getElementById('Comments').value = "";
             selectedPlace = {};
             grecaptcha.reset();
-            // Reload page after 3 seconds to show new point
             setTimeout(() => location.reload(), 3000);
         }).catch(err => {
             console.error(err);
@@ -243,21 +332,18 @@
         });
     }
 
-    // --- 4. LOAD MAP ---
+    // --- 3. LOAD MAP WITH SEARCH DROPDOWN ---
     var map = L.map('mymap').setView([20, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+        attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    var markers = L.markerClusterGroup({ disableClusteringAtZoom: 15 });
-
-    // Add "Locate Me" Button
+    // Locate Me Button
     L.Control.Button = L.Control.extend({
         onAdd: function(map) {
             var btn = L.DomUtil.create('button', 'btn btn-default btn-sm');
             btn.innerHTML = '<i class="ion-android-locate"></i> Search Near Me';
             btn.style.margin = "10px 0 0 10px";
-            btn.style.cursor = "pointer";
             btn.onclick = function(){ 
                 map.locate({setView: true, maxZoom: 16, enableHighAccuracy: true}); 
             }
@@ -266,44 +352,92 @@
     });
     new L.Control.Button({ position: 'topleft' }).addTo(map);
 
-    // Fetch Data from Google Sheet
+    // --- NEW: Add Search Dropdown Control ---
+    var SearchControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function(map) {
+            var div = L.DomUtil.create('div', 'leaflet-control-search-container');
+            // This prevents clicking the dropdown from clicking the map behind it
+            L.DomEvent.disableClickPropagation(div); 
+            div.innerHTML = '<select id="eaterySearch"><option></option></select>';
+            return div;
+        }
+    });
+    map.addControl(new SearchControl());
+
+    // Initialize the Select2 dropdown
+    $(document).ready(function() {
+        $('#eaterySearch').select2({
+            placeholder: "🔍 Find Eatery...",
+            allowClear: true,
+            width: 'resolve' // Use CSS width
+        });
+    });
+
+    var markers = L.markerClusterGroup({ disableClusteringAtZoom: 15 });
+    
+    // Store markers in an object so we can find them by ID/Name later
+    var markerMap = {}; 
+
+    // Fetch Data
     fetch(APP_SCRIPT_URL)
     .then(res => res.json())
     .then(data => {
-        if(!Array.isArray(data)) {
-             console.error("Data format error", data);
-             return;
-        }
-        data.forEach(row => {
-            // Ensure Lat/Lng exist and are numbers
+        if(!Array.isArray(data)) return;
+        
+        // Sorting data alphabetically helps the dropdown list
+        data.sort((a, b) => a.EateryName.localeCompare(b.EateryName));
+
+        data.forEach((row, index) => {
             let lat = parseFloat(row.Lat);
             let lng = parseFloat(row.Lng);
 
             if(!isNaN(lat) && !isNaN(lng)) {
-                // Determine color based on rating
                 let color = 'red';
                 let r = parseFloat(row.MeanSustainabilityrating);
                 if(r >= 4) color = 'green';
                 else if(r >= 3) color = 'orange';
 
                 let icon = L.AwesomeMarkers.icon({
-                    icon: 'leaf', // Changed icon to leaf for sustainability theme
+                    icon: 'leaf',
                     prefix: 'ion',
                     markerColor: color,
                     iconColor: 'white'
                 });
 
                 let marker = L.marker([lat, lng], {icon: icon});
-                // Simple popup style
-                let popupContent = `<strong>${row.EateryName}</strong><br>
-                                    Avg Rating: ${Number(r).toFixed(1)} / 5`;
-                marker.bindPopup(popupContent);
+                marker.bindPopup(`<strong>${row.EateryName}</strong><br>Avg Rating: ${Number(r).toFixed(1)} / 5`);
                 markers.addLayer(marker);
+
+                // --- NEW: Add to Search Dropdown & Marker Map ---
+                // We use a unique ID (index) to link the dropdown option to the marker object
+                var optionId = "marker_" + index;
+                markerMap[optionId] = marker;
+
+                // Create the option for the dropdown
+                var newOption = new Option(row.EateryName, optionId, false, false);
+                $('#eaterySearch').append(newOption).trigger('change');
             }
         });
         map.addLayer(markers);
     })
-    .catch(e => console.log("Map Error - Check connection or Sheet URL:", e));
+    .catch(e => console.log("Map Error:", e));
+
+    // --- NEW: Handle Search Selection ---
+    $('#eaterySearch').on('select2:select', function (e) {
+        var selectedId = e.params.data.id;
+        var targetMarker = markerMap[selectedId];
+
+        if (targetMarker) {
+            // 1. Zoom to the marker (Zoom level 18 is close)
+            map.setView(targetMarker.getLatLng(), 18);
+            
+            // 2. If it's inside a cluster, we must expand the cluster first
+            markers.zoomToShowLayer(targetMarker, function() {
+                targetMarker.openPopup();
+            });
+        }
+    });
 
 </script>
 </body>
